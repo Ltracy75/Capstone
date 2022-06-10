@@ -14,6 +14,10 @@ namespace Capstone.Controllers
     public class RequestsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private const string APPROVED = "Approved";
+        private const string REJECTED = "Rejected";
+        private const string REVIEW = "Review";
+        private const string PAID = "Paid";
 
         public RequestsController(AppDbContext context)
         {
@@ -28,8 +32,19 @@ namespace Capstone.Controllers
           {
               return NotFound();
           }
-            return await _context.Requests.ToListAsync();
+            return await _context.Requests.Include(x => x.User).ToListAsync();
         }
+
+        //*me Get: api/Requests/Review/UserId
+        [HttpGet("reviewlst/{userId}")]
+        public async Task<ActionResult<IEnumerable<Request>>> GetRequestsInReview(int userId)
+            {
+            var requests = await _context.Requests
+                                    .Where(x => x.Status == "REVIEW"
+                                            && x.UserId != userId)
+                                    .ToListAsync();
+            return requests;
+            }
 
         // GET: api/Requests/5
         [HttpGet("{id}")]
@@ -39,7 +54,9 @@ namespace Capstone.Controllers
           {
               return NotFound();
           }
-            var request = await _context.Requests.FindAsync(id);
+            var request = await _context.Requests.Include(x => x.User).Include(x => x.RequestLines)
+                                                .ThenInclude(x => x.Product)
+                                            .SingleOrDefaultAsync(x => x.Id == id);
 
             if (request == null)
             {
@@ -48,6 +65,24 @@ namespace Capstone.Controllers
 
             return request;
         }
+        [HttpGet("reviewed")]
+        public async Task<ActionResult<IEnumerable<Request>>> GetApprovedRequests()
+            {
+            return await _context.Requests.Where(x => x.Status == REVIEW).Include(x => x.User).ToListAsync();
+            }
+
+
+        [HttpPut("review/{id}")]
+        public async Task<IActionResult> ReviewExpense(int id, Request request)
+            {
+            var prevStatus = request.Status;
+            request.Status = (request.Total <= 50) ? APPROVED : REVIEW;
+            var rc = await PutRequest(id, request);
+            if ((prevStatus == APPROVED && request.Status != APPROVED)
+                || (prevStatus != APPROVED && request.Status == APPROVED)) { }
+
+            return rc;
+            }
 
         // PUT: api/Requests/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -80,9 +115,30 @@ namespace Capstone.Controllers
             return NoContent();
         }
 
-        // POST: api/Requests
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
+        [HttpPut("approve/{id}")]
+        public async Task<IActionResult> ApproveRequest(int id, Request request)
+            {
+            if (request.Status == APPROVED)
+                {
+                return BadRequest();
+                }
+            request.Status = APPROVED;
+            var rc = await PutRequest(id, request);
+            
+            return rc;
+            }
+
+        [HttpPut("reject/{id}")]
+        public async Task<IActionResult> RejectRequest(int id, Request request)
+            {
+            request.Status = REJECTED;
+            var rc = await PutRequest(id, request);
+            return rc;
+
+            }
+            // POST: api/Requests
+            // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+            [HttpPost]
         public async Task<ActionResult<Request>> PostRequest(Request request)
         {
           if (_context.Requests == null)

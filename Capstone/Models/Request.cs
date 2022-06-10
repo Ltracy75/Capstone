@@ -15,12 +15,14 @@ namespace Capstone.Models
         [StringLength(20)]
         public string DeliveryMode { get; set; } = "Pickup";
         [StringLength(10)]
-        public string Status { get; private set; } = "New";
+        public string Status { get;  set; } = "New";
         [Column(TypeName = "decimal(11,2)")]
-        public decimal Total { get; private set; } = 0;
+        public decimal Total { get;  set; } = 0;
         public int UserId { get; set; } = 0;
 
         public virtual User? User { get; set; } = null!;
+
+        public virtual ICollection<RequestLine>? RequestLines { get; set; }
 
         }
     }

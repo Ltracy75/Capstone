@@ -3,6 +3,7 @@ using Capstone.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Capstone.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220610142147_collection update")]
+    partial class collectionupdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -51,7 +53,7 @@ namespace Capstone.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
-                    b.Property<int>("VendorId")
+                    b.Property<int>("VendorID")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -59,7 +61,7 @@ namespace Capstone.Migrations
                     b.HasIndex("PartNbr")
                         .IsUnique();
 
-                    b.HasIndex("VendorId");
+                    b.HasIndex("VendorID");
 
                     b.ToTable("Products");
                 });
@@ -240,7 +242,7 @@ namespace Capstone.Migrations
                 {
                     b.HasOne("Capstone.Models.Vendor", "Vendor")
                         .WithMany()
-                        .HasForeignKey("VendorId")
+                        .HasForeignKey("VendorID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
