@@ -20,6 +20,19 @@ namespace Capstone.Controllers
             _context = context;
         }
 
+        [HttpGet("{email}/{password}")]
+        public async Task<ActionResult<User>> Login(string email, string password)
+        {
+            var user = await _context.Users
+                                        .SingleOrDefaultAsync(x => x.Email == email && x.Password == password);
+            if (user is null)
+            {
+                return NotFound();
+            }
+            return user;
+        }
+
+
         // GET: api/Users
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
